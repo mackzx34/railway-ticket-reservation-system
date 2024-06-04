@@ -10,7 +10,7 @@
         header('Location: index.php');
     }
 
-    include "config/connection.php";
+    include "include/connection.inc.php";
     // FOR PAGINATION
     $sql = "SELECT * FROM ticket";
     include "template/pagination.php";

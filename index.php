@@ -1,6 +1,6 @@
 <?php
 session_start();
-include "config/connection.php";
+include "include/connection.inc.php";
 
 if(isset($_SESSION['username'])){
     if($_SESSION['username'] == 'admin1' || $_SESSION['username'] == 'admin'){
@@ -57,7 +57,7 @@ if(isset($_POST['signin'])){
     <h3 class="heading">Welcome to eRail</h3>
     <label>
         <p class="label-txt">ENTER YOUR USERNAME</p>
-        <input type="text" class="input" name="username" value="<?php echo htmlspecialchars($username) ?>">
+        <input type="text" class="input" name="username" value="">
         <div class="line-box">
             <div class="line"></div>
         </div>
@@ -65,7 +65,7 @@ if(isset($_POST['signin'])){
     </label>
     <label>
         <p class="label-txt">ENTER YOUR PASSWORD</p>
-        <input type="password" class="input" name="password" value="<?php echo htmlspecialchars($password) ?>">
+        <input type="password" class="input" name="password" value="">
         <div class="line-box">
             <div class="line"></div>
         </div>

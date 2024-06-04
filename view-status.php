@@ -1,6 +1,6 @@
 <?php
     session_start();
-    include "config/connection.php";
+    include "include/connection.inc.php";
     $errors = array('number' => '', 'date' => '', 'final' => '');
     $number = $date = '';
     $avail_ac = $avail_sleeper = '';

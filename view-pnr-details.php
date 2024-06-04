@@ -1,7 +1,7 @@
 <?php
     session_start();
 
-    include "config/connection.php";
+    include "include/connection.inc.php";
     $query1 = "SELECT * FROM passenger WHERE pnr_no = '".$_SESSION['view_pnr']."' ";
     if($conn->query($query1) == FALSE){
         echo $conn->error;

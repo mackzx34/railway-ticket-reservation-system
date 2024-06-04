@@ -1,6 +1,6 @@
 <?php
     session_start();
-    include "config/connection.php";
+    include "include/connection.inc.php";
     $errors = array('pnr' => '');
     $pnr = '';
     if(isset($_POST['submit'])){

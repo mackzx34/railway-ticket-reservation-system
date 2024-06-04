@@ -1,6 +1,6 @@
 <?php
     session_start();
-    include "config/connection.php";
+    include "include/connection.inc.php";
 
     // FOR PAGINATION
     $sql = "SELECT * FROM train ORDER BY t_date DESC";
