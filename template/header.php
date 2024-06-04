@@ -39,7 +39,7 @@
     </ul>
     <ul class="pull-right nav navbar-nav">
       <li class="nav-item">
-          <a class="nav-link" href="admin-login.php">Admin Login</a>
+          <a class="nav-link" href="index.php">Login</a>
       </li>
     </ul>
     

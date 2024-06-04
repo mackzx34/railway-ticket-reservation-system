@@ -23,7 +23,8 @@
     $pass = $_POST[ 'password' ];
     $pass = stripslashes( $pass );
     $pass = ((isset($GLOBALS["___conn"]) && is_object($GLOBALS["___conn"])) ? mysqli_real_escape_string($GLOBALS["___conn"],  $pass ) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : ""));
-    $pass = md5( $pass );
+    $pass = sha1( $pass );
+    // $pass = hash('sha256', $pass);
 
     // Default values
     $total_failed_login = 3;
@@ -111,7 +112,7 @@
 
     Header( 'Cache-Control: no-cache, must-revalidate');    // HTTP/1.1
     Header( 'Content-Type: text/html;charset=utf-8' );      // TODO- proper XHTML headers...
-    Header( 'Expires: Tue, 23 Jun 2009 12:00:00 GMT' );     // Date in the past
+    Header( 'Expires: Tue, 23 Jun 2025 12:00:00 GMT' );     // Date in the past
     
     // Anti-CSRF
     generateSessionToken();

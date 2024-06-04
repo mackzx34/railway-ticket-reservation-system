@@ -1,15 +1,5 @@
 <?php
-    include "config/connection.php";
-
-    // REDIRECTION
-    if(isset($_SESSION['username'])){
-        if($_SESSION['username'] == 'admin1' || $_SESSION['username'] == 'admin'){
-            header('Location: admin-page.php');
-        }
-        else{
-            header('Location: user.php');
-        }
-    }
+    include "include/connection.inc.php";
 
     $errors = array('name' => '', 'username' => '', 'email' => '', 'address' => '', 'password' => '', 'confirmp' => '', 'error' => '');
     $name = $username = $email = $address = $password = $confirmp = $error = '';
@@ -34,10 +24,10 @@
             }
             // CHECK USERNAME ALREADY EXISTED 
             $username = $conn->real_escape_string($username);
-            $query2 = "CALL check_username_registered('$username');";
-            if ($conn->query($query2) === FALSE) {
-                $errors['username'] = $conn->error;
-            }
+            // $query2 = "CALL check_username_registered('$username');";
+            // if ($conn->query($query2) === FALSE) {
+            //     $errors['username'] = $conn->error;
+            // }
         }
 
         if(empty($email)){
@@ -51,9 +41,9 @@
             // CHECK EMAIL ALREADY REGISTERED
             $email = $conn->real_escape_string($email);
             $query3 = "CALL check_email_registered('$email')";
-            if ($conn->query($query3) === FALSE) {
-                $errors['email'] = $conn->error;
-            }
+            // if ($conn->query($query3) === FALSE) {
+            //     $errors['email'] = $conn->error;
+            // }
         }    
 
         if(empty($address)){
@@ -73,8 +63,8 @@
         // When no errors redirect to index.php and insert values in user table
         if(! array_filter($errors)){
             // Hash the password before storing it
-            $hashed_password = md5($password);
-            $query1 = "INSERT INTO user (username, name, email, address, password) VALUES ('$username', '$name', '$email', '$address', '$hashed_password')";
+            $hashed_password = sha1($password);
+            $query1 = "INSERT INTO users (user, name, email, address, password) VALUES ('$username', '$name', '$email', '$address', '$hashed_password')";
             if ($conn->query($query1) === FALSE) {
                 $errors['error'] = $conn->error;
             }

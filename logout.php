@@ -1,5 +1,6 @@
 <?php
-    session_start();
+    include "include/connection.inc.php";
+    Logout();
     session_destroy();
     header("Location:index.php");
 ?>
