@@ -134,7 +134,7 @@ function destroySessionToken() {  # Destroy any session with the name 'session_t
 }
 
 function tokenField() {  # Return a field for the (CSRF) token
-	return "<input type='text' class='input' name='user_token' value='{$_SESSION[ 'session_token' ]}' />";
+	return "<input type='hidden' class='input' name='user_token' value='{$_SESSION[ 'session_token' ]}' />";
 }
 // -- END (Token functions)
 
