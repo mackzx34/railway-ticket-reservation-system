@@ -9,7 +9,10 @@
     else{
         header('Location: index.php');
     }
-    include "config/connection.php";
+
+    include "include/connection.inc.php";
+    DatabaseConnect();
+    
     $query = "SELECT * FROM passenger WHERE pnr_no = '".$_SESSION['pnr_no']."' ";
     if($conn->query($query) == FALSE){
         echo $conn->error;

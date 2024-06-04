@@ -10,7 +10,9 @@
         header('Location: index.php');
     }
 
-    include "config/connection.php";
+    include "include/connection.inc.php";
+    DatabaseConnect();
+
     $num_passengers = $_SESSION['num_passengers'];
     $errors = array('validate' => '', 'seats' => '');
     $name = $age = $gender = [];
@@ -18,10 +20,32 @@
       $name[$i] = $age[$i] = $gender[$i] = '';
     }
    
-    if(isset($_POST['check'])){
+    if(isset($_POST['check']) && isset($_POST['name']) && isset($_POST['age'])){
+  
       $name = $_POST['name'];
+      // $name = trim($name);
+      // $name = stripslashes($name);
+      // $name = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
+
       $age = $_POST['age'];
+      // $age = trim($age);
+      // $age = stripslashes($age);
+      // $age = htmlspecialchars($age, ENT_QUOTES, 'UTF-8');
+
       $gender = $_POST['gender'];
+      // $gender = trim($gender);
+      // $gender = stripslashes($gender);
+      // $gender = htmlspecialchars($gender, ENT_QUOTES, 'UTF-8');
+
+      // Assuming $GLOBALS["___conn"] is your MySQLi connection
+      // if (isset($GLOBALS["___conn"]) && is_object($GLOBALS["___conn"])) {
+      //     $name = mysqli_real_escape_string($GLOBALS["___conn"], $name);
+      //     $age = mysqli_real_escape_string($GLOBALS["___conn"], $age);
+      //     $gender = mysqli_real_escape_string($GLOBALS["___conn"], $gender);
+      // } else {
+      //     trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR);
+      // }
+    
       
       if(in_array('', $name, true) || in_array('', $age, true) || in_array('', $gender, true)){
         $errors['validate'] = 'Please fill details of all the passengers!';
@@ -37,7 +61,8 @@
         $coach = $_SESSION['coach'];
         $num_passengers = $_SESSION['num_passengers'];
         $u_name = $_SESSION['username'];
-        
+      
+      // try {
         // IF AVAILABLE THEN REDIRECT GET TICKET ELSE FAILURE PAGE
         $query1 = "CALL check_seats_availabilty('$train_number', '$date', '$coach', '$num_passengers')";
         if ($conn->query($query1) === FALSE) {
@@ -66,6 +91,13 @@
           header('Location: get-ticket.php');
          
         }
+
+       
+          
+      // } catch (Exception $e) {
+      //     echo "Error: " . $e->getMessage();
+      // }
+
       }
     }
 ?>

@@ -10,41 +10,103 @@
         header('Location: admin-login.php');
     }
     
-    include "config/connection.php";
+    include "include/connection.inc.php";
+    DatabaseConnect();
 
-    $errors = array('train_number' => '', 'date' => '', 'num_ac' => '', 'num_sleeper' => '', 'checks' => '');
-    $train_number = $date = $num_ac = $num_sleeper = $checks = ''; 
+    $errors = array('train_number' => '', 'date' => '', 'num_ac' => '', 'num_sleeper' => '', 'checks' => '', 'error' => '');
+    $train_number = $date = $num_ac = $num_sleeper = $checks = $error = ''; 
     $admin_name = $_SESSION['username'];
    
-    if(isset($_POST['release'])){
-        $train_number = $_POST['train_number'];
-        $date = $_POST['date'];;
-        $num_ac = $_POST['num_ac'];
-        $num_sleeper = $_POST['num_sleeper'];
+    if(isset($_POST['release']) && isset ($_POST['train_number']) && isset ($_POST['date']) && isset ($_POST['num_ac']) && isset ($_POST['num_sleeper'])){
 
-        if(empty($train_number)){
-			$errors['train_number'] = 'Train Number is required';
+        // Anti-CSRF
+        // if (array_key_exists ("session_token", $_SESSION)) {
+        //   $session_token = $_SESSION[ 'session_token' ];
+        // } else {
+        //   $session_token = "";
+        // }
+
+        // checkToken( $_REQUEST[ 'user_token' ], $session_token, 'release-train.php' );
+
+        $train_number = $_POST['train_number'];
+        $train_number = trim( $train_number );
+        $train_number = stripslashes( $train_number );
+        $train_number = ((isset($GLOBALS["___conn"]) && is_object($GLOBALS["___conn"])) ? mysqli_real_escape_string($GLOBALS["___conn"],  $train_number ) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : ""));
+        if(!preg_match('/^[0-9]+$/', $train_number)){
+            $errors['error'] .= 'Train No must consist of Number only';
         }
-        if(empty($date)){
-			$errors['date'] = 'Date is required';
+
+        $date = $_POST['date'];
+        $date = trim($date);
+        $date = stripslashes($date);
+        $date = ((isset($GLOBALS["___conn"]) && is_object($GLOBALS["___conn"])) ? mysqli_real_escape_string($GLOBALS["___conn"],  $date ) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : ""));
+        // if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+        //     $errors['error'] .= 'Date must be in the format YYYY-MM-DD';
+        // }
+
+        $num_ac = $_POST['num_ac'];
+        $num_ac = trim($num_ac);
+        $num_ac = stripslashes($num_ac);
+        $num_ac = ((isset($GLOBALS["___conn"]) && is_object($GLOBALS["___conn"])) ? mysqli_real_escape_string($GLOBALS["___conn"],  $num_ac ) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : ""));
+        if (!preg_match('/^[0-9]+$/', $num_ac)) {
+            $errors['error'] .= 'AC coaches must consist of numbers only';
         }
+
+        $num_sleeper = $_POST['num_sleeper'];
+        $num_sleeper = trim($num_sleeper);
+        $num_sleeper = stripslashes($num_sleeper);
+        $num_sleeper = ((isset($GLOBALS["___conn"]) && is_object($GLOBALS["___conn"])) ? mysqli_real_escape_string($GLOBALS["___conn"],  $num_sleeper ) : ((trigger_error("[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.", E_USER_ERROR)) ? "" : ""));
+        if (!preg_match('/^[0-9]+$/', $num_sleeper)) {
+            $errors['error'] .= 'Sleeper coaches must consist of numbers only';
+        }
+
+        // Check the database (Check train information)
+        $data = $db->prepare( 'SELECT t_number, t_date FROM train WHERE t_number = (:train_number) AND t_date = (:date) LIMIT 1;' );
+        $data->bindParam(':train_number', $train_number, PDO::PARAM_STR);
+        $data->bindParam(':date', $date, PDO::PARAM_STR);
+        $data->execute();
+        $row = $data->fetch();
+
+        if( ( $data->rowCount() == 1 ) && ( $row[ 't_number' ] == $train_number ) && ( $row[ 't_date' ] == $date) )  {
+            $errors['error'] = 'This Train Already Released on that day';
+        }
+ 
+        if (! array_filter($errors)) {
+            
+            $data = $db->prepare('INSERT INTO train (t_number, t_date, num_ac, num_sleeper, released_by) VALUES (:train_number, :date, :num_ac, :num_sleeper, :released)');
+            $data->bindParam(':train_number', $train_number, PDO::PARAM_STR);
+            $data->bindParam(':date', $date, PDO::PARAM_STR);
+            $data->bindParam(':num_ac', $num_ac, PDO::PARAM_INT);
+            $data->bindParam(':num_sleeper', $num_sleeper, PDO::PARAM_INT);
+            $data->bindParam(':released', $admin_name, PDO::PARAM_INT);
         
-        // INSERT INTO TRAINS
-        if(! array_filter($errors)){
-            $query1 = "INSERT INTO train VALUES ('$train_number', '$date', '$num_ac', '$num_sleeper', '$admin_name')";
-            if ($conn->query($query1) === TRUE) {
-                header('Location: admin-page.php');
-                $query1 = "INSERT INTO train_status VALUES ('$train_number', '$date', 0, 0)";
-                if ($conn->query($query1) === FALSE) {
-                    echo $conn->error;
+            if ($data->execute()) {
+                if ($data->rowCount() == 1) {
+
+                    $data = $db->prepare('INSERT INTO train_status (t_number, t_date, seats_b_ac, seats_b_sleeper) VALUES (:train_number, :date, 0, 0)');
+                    $data->bindParam(':train_number', $train_number, PDO::PARAM_STR);
+                    $data->bindParam(':date', $date, PDO::PARAM_STR);
+
+                    if ($data->execute()) {
+                        if ($data->rowCount() == 1) {
+                            $db = NULL;
+                            $errors['error'] = 'sucess';
+                            $success['success'] .= "Train has been registered.";
+                            sleep(6);
+                            header('Location: admin-page.php');
+                            exit(); 
+                        }
+                    }
+
+                    
+                } else {
+                    $errors['error'] .= "Error inserting train.";
                 }
+            } else {
+                $errors['error'] .= "Error inserting train.";
             }
-            else{
-                // ERROR OF before_release_train Trigger
-                $errors['checks'] = $conn->error;
-            }  
-            $conn->close();
         }
+
     }
     $welcome_name = $_SESSION['username'] ?? 'Guest';
 ?>
@@ -92,6 +154,7 @@
     <p class= "bg-danger text-white"><?php echo htmlspecialchars($errors['num_sleeper'])?></p>
     </label>
     <p class= "bg-danger text-white"><?php echo htmlspecialchars($errors['checks'])?></p>
+    <p class= "bg-danger text-white"><?php echo htmlspecialchars($errors['error'])?></p>
     <a href="admin-page.php" class="register">Back</a>
     <button type="submit" name="release" value="submit">Release</button>
 </form>

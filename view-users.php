@@ -13,11 +13,11 @@
     include "include/connection.inc.php";
     
     // FOR PAGINATION
-    $sql = "SELECT * FROM user";
+    $sql = "SELECT * FROM users";
     
     include "template/pagination.php";
 
-    $sql = "SELECT *FROM user LIMIT " . $page_first_result . ',' . $results_per_page;  
+    $sql = "SELECT *FROM users LIMIT " . $page_first_result . ',' . $results_per_page;  
     $result = $conn->query($sql); 
     $conn->close();  
 
@@ -68,7 +68,7 @@
                 { 
              ?> 
             <tr> 
-                <td><?php echo $rows['username'];?></td> 
+                <td><?php echo $rows['user'];?></td> 
                 <td><?php echo $rows['name'];?></td> 
                 <td><?php echo $rows['email'];?></td> 
                 <td><?php echo $rows['address'];?></td> 

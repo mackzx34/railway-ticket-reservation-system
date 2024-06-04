@@ -123,7 +123,7 @@ echo "
 <!DOCTYPE html>
 <html lang=\"en\">
 <head>
-    <title>Admin Login</title>
+    <title>Home Page</title>
 </head>";
 
   include "template/header.php";

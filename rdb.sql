@@ -3,10 +3,11 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 03, 2024 at 09:12 PM
+-- Generation Time: Jun 05, 2024 at 12:31 AM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.0.30
+-- PHP Version: 8.2.12
 
+SET FOREIGN_KEY_CHECKS=0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -20,6 +21,8 @@ SET time_zone = "+00:00";
 --
 -- Database: `rdb`
 --
+CREATE DATABASE IF NOT EXISTS `rdb` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;
+USE `rdb`;
 
 DELIMITER $$
 --
@@ -139,35 +142,6 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `check_admin_credentials` (IN `n` VA
     END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `check_email_registered` (IN `in_email` VARCHAR(50))  NO SQL BEGIN
-	DECLARE email_id VARCHAR(50);
-    DECLARE message VARCHAR(128) DEFAULT '';
-    DECLARE finished INT DEFAULT 0;
-	DEClARE user_email CURSOR
-    	FOR SELECT email FROM user;
-	DECLARE CONTINUE HANDLER 
-    	FOR NOT FOUND SET finished = 1;
-        
-    OPEN user_email;
-
-	get_email: LOOP
-		FETCH user_email INTO email_id;
-		IF finished = 1 THEN 
-			LEAVE get_email;
-		END IF;
-        IF email_id = in_email THEN
-        	SET message = 'Email id already registered';
-        END IF;
- 
-	END LOOP get_email;
-	CLOSE user_email;
-    
-    IF message != '' THEN
-		SIGNAL SQLSTATE '45000'
-    	SET MESSAGE_TEXT = message;
-    END IF;
-END$$
-
 CREATE DEFINER=`root`@`localhost` PROCEDURE `check_seats_availabilty` (IN `tnum` INT, IN `tdate` DATE, IN `type` VARCHAR(50), IN `num_p` INT)  NO SQL BEGIN
 	DECLARE avail_a INT;
     DECLARE avail_s INT;
@@ -207,106 +181,6 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `check_seats_availabilty` (IN `tnum`
     IF m1 not like '' THEN
 		SIGNAL SQLSTATE '45000'
     	SET MESSAGE_TEXT = m1;
-    END IF;
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `check_train_details` (IN `num` INT(11), IN `date` DATE)  NO SQL BEGIN
-	DECLARE n INT;
-	DECLARE d DATE;
-    DECLARE m1 VARCHAR(128) DEFAULT '';
-    DECLARE m2 VARCHAR(128) DEFAULT '';
-    DECLARE finished INT DEFAULT 0;
-    DECLARE upper_bound DATE DEFAULT DATE_ADD(CURRENT_DATE(), INTERVAL 2 MONTH);
-	DEClARE train_info CURSOR
-    	FOR SELECT t_number, t_date FROM train;
-	DECLARE CONTINUE HANDLER 
-    	FOR NOT FOUND SET finished = 1;
-    
-    IF date < CURRENT_DATE() THEN
-    	SET m1 = 'Please enter valid date';
-    ELSEIF date > upper_bound THEN
-    	SET m1 = 'Train can be booked atmost 2 months in advance';
-    END IF;
-    
-    OPEN train_info;
-
-	get_info: LOOP
-		FETCH train_info INTO n, d;
-		IF finished = 1 THEN 
-			LEAVE get_info;
-		END IF;
-        IF num = n AND date = d THEN
-        	SET m2 = 'Found';
-        END IF;
- 
-	END LOOP get_info;
-	CLOSE train_info;
-    
-    IF m1 not like '' THEN
-		SIGNAL SQLSTATE '45000'
-    	SET MESSAGE_TEXT = m1;
-    ELSEIF m2 like '' THEN
-    	SIGNAL SQLSTATE '45000'
-    	SET MESSAGE_TEXT = 'Train not yet released!';
-    END IF;
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `check_username_registered` (IN `in_username` VARCHAR(10))  NO SQL BEGIN
-	DECLARE name VARCHAR(10);
-    DECLARE message VARCHAR(128) DEFAULT '';
-    DECLARE finished INT DEFAULT 0;
-	DEClARE user_name CURSOR
-    	FOR SELECT username FROM user;
-	DECLARE CONTINUE HANDLER 
-    	FOR NOT FOUND SET finished = 1;
-        
-    OPEN user_name;
-
-	get_name: LOOP
-		FETCH user_name INTO name;
-		IF finished = 1 THEN 
-			LEAVE get_name;
-		END IF;
-        IF name = in_username THEN
-        	SET message = 'Username already taken';
-        END IF;
- 
-	END LOOP get_name;
-	CLOSE user_name;
-    
-    IF message != '' THEN
-		SIGNAL SQLSTATE '45000'
-    	SET MESSAGE_TEXT = message;
-    END IF;
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `check_user_credentials` (IN `n` VARCHAR(10), IN `p` VARCHAR(50))  NO SQL BEGIN
-	DECLARE name VARCHAR(10);
-	DECLARE pass VARCHAR(50);
-    DECLARE message VARCHAR(128) DEFAULT '';
-    DECLARE finished INT DEFAULT 0;
-	DEClARE user_info CURSOR
-    	FOR SELECT username, password FROM user;
-	DECLARE CONTINUE HANDLER 
-    	FOR NOT FOUND SET finished = 1;
-        
-    OPEN user_info;
-
-	get_info: LOOP
-		FETCH user_info INTO name, pass;
-		IF finished = 1 THEN 
-			LEAVE get_info;
-		END IF;
-        IF name = n AND pass = p THEN
-        	SET message = 'Found';
-        END IF;
- 
-	END LOOP get_info;
-	CLOSE user_info;
-    
-    IF message like '' THEN
-		SIGNAL SQLSTATE '45000'
-    	SET MESSAGE_TEXT = 'Invalid Username or Password';
     END IF;
 END$$
 
@@ -354,25 +228,6 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Table structure for table `admin`
---
-
-CREATE TABLE `admin` (
-  `username` varchar(50) NOT NULL,
-  `password` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `admin`
---
-
-INSERT INTO `admin` (`username`, `password`) VALUES
-('admin', '7488e331b8b64e5794da3fa4eb10ad5d'),
-('admin1', 'e00cf25ad42683b3df678c61f42c6bda');
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `passenger`
 --
 
@@ -387,60 +242,19 @@ CREATE TABLE `passenger` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
+-- RELATIONSHIPS FOR TABLE `passenger`:
+--   `pnr_no`
+--       `ticket` -> `pnr_no`
+--
+
+--
 -- Dumping data for table `passenger`
 --
 
 INSERT INTO `passenger` (`name`, `age`, `gender`, `pnr_no`, `berth_no`, `berth_type`, `coach_no`) VALUES
-('Mjaliwa Mr', 25, 'Male', '696-276-5920', 1, 'LB', 1),
-('Caren ', 23, 'Female', '696-276-5920', 2, 'LB', 1),
-('Joseph Zacharia', 25, 'Male', '8-894-438400', 1, 'LB', 1);
-
---
--- Triggers `passenger`
---
-DELIMITER $$
-CREATE TRIGGER `before_berth_assign` BEFORE INSERT ON `passenger` FOR EACH ROW BEGIN
-    DECLARE msg VARCHAR(255) DEFAULT '';
-    DECLARE finished INT DEFAULT 0;
-    DECLARE tnum INT;
-    DECLARE tdate DATE;
-    DECLARE c1 VARCHAR(50);
-    DECLARE bno INT;
-    DECLARE cno INT;
-    DECLARE t_no INT;
-    DECLARE t_d INT;
-    DECLARE c2 VARCHAR(50);
-	DECLARE p_info CURSOR FOR
-        SELECT t_number, t_date, berth_no, coach_no, coach
-        FROM passenger, ticket
-        WHERE passenger.pnr_no = ticket.pnr_no;
-	DECLARE CONTINUE HANDLER 
-    	FOR NOT FOUND SET finished = 1;
-        
-    SELECT t_number, t_date, coach 
-    FROM ticket
-    WHERE pnr_no = NEW.pnr_no
-    INTO t_no, t_d, c1;
-    
-    OPEN p_info;
-	get_info: LOOP
-		FETCH p_info INTO tnum, tdate, bno, cno, c2;
-		IF finished = 1 THEN 
-			LEAVE get_info;
-		END IF;
-        IF tnum = t_no AND tdate = t_d AND bno = NEW.berth_no AND cno = NEW.coach_no AND c1 = c2 THEN
-        	SET msg = 'Found';
-        END IF;
-	END LOOP get_info;
-	CLOSE p_info;
-    
-    IF msg not like '' THEN
-		SIGNAL SQLSTATE '45000'
-    	SET MESSAGE_TEXT = 'This seat has been booked already';
-    END IF;
-END
-$$
-DELIMITER ;
+('ss', 23, 'Female', '504-560-1200', 9, 'UB', 2),
+('ali', 43, 'Male', '504-889-3520', 10, 'UB', 2),
+('mahoo', 35, 'Female', '504-889-3520', 11, 'SL', 2);
 
 -- --------------------------------------------------------
 
@@ -458,25 +272,41 @@ CREATE TABLE `ticket` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
+-- RELATIONSHIPS FOR TABLE `ticket`:
+--
+
+--
 -- Dumping data for table `ticket`
 --
 
 INSERT INTO `ticket` (`pnr_no`, `coach`, `booked_by`, `booked_at`, `t_number`, `t_date`) VALUES
-('696-276-5920', 'ac', 'majaliwa', '2024-06-01 15:02:33', 1122, '2024-07-01'),
-('8-894-438400', 'ac', 'joe', '2024-05-23 13:35:32', 1, '2024-06-23');
-
---
--- Triggers `ticket`
---
-DELIMITER $$
-CREATE TRIGGER `check_ticket_update` BEFORE UPDATE ON `ticket` FOR EACH ROW BEGIN
-	IF NEW.pnr_no != OLD.pnr_no OR NEW.coach != OLD.coach THEN
-    	SIGNAL SQLSTATE '45000' 
-    	SET MESSAGE_TEXT = 'Ticket details cannot be updated';
-    END IF;
-END
-$$
-DELIMITER ;
+('504-115-6336', 'ac', 'jode', '2024-06-04 22:10:34', 1, '2024-06-23'),
+('504-169-8592', 'ac', 'jode', '2024-06-04 22:10:31', 1, '2024-06-23'),
+('504-257-6304', 'ac', 'jode', '2024-06-04 22:14:19', 1, '2024-06-23'),
+('504-267-5504', 'ac', 'jode', '2024-06-04 22:10:40', 1, '2024-06-23'),
+('504-293-3568', 'ac', 'jode', '2024-06-04 22:10:32', 1, '2024-06-23'),
+('504-350-4496', 'ac', 'jode', '2024-06-04 22:10:35', 1, '2024-06-23'),
+('504-437-6608', 'ac', 'jode', '2024-06-04 22:10:33', 1, '2024-06-23'),
+('504-446-5360', 'ac', 'jode', '2024-06-04 22:10:29', 1, '2024-06-23'),
+('504-454-6464', 'ac', 'jode', '2024-06-04 22:10:38', 1, '2024-06-23'),
+('504-492-6880', 'ac', 'jode', '2024-06-04 22:10:39', 1, '2024-06-23'),
+('504-560-1200', 'ac', 'jode', '2024-06-04 22:19:54', 1, '2024-06-23'),
+('504-562-3408', 'ac', 'jode', '2024-06-04 22:19:05', 1, '2024-06-23'),
+('504-618-8592', 'ac', 'jode', '2024-06-04 22:10:31', 1, '2024-06-23'),
+('504-678-8160', 'ac', 'jode', '2024-06-04 22:10:26', 1, '2024-06-23'),
+('504-693-1456', 'ac', 'jode', '2024-06-04 22:10:36', 1, '2024-06-23'),
+('504-706-9504', 'ac', 'jode', '2024-06-04 22:10:30', 1, '2024-06-23'),
+('504-736-8256', 'ac', 'jode', '2024-06-04 22:19:07', 1, '2024-06-23'),
+('504-793-3920', 'ac', 'jode', '2024-06-04 22:10:24', 1, '2024-06-23'),
+('504-826-3744', 'ac', 'jode', '2024-06-04 20:57:19', 1, '2024-06-23'),
+('504-830-3632', 'ac', 'jode', '2024-06-04 20:56:00', 1, '2024-06-23'),
+('504-878-8688', 'ac', 'jode', '2024-06-04 22:10:37', 1, '2024-06-23'),
+('504-889-3520', 'ac', 'jode', '2024-06-04 22:22:00', 1, '2024-06-23'),
+('504-910-2528', 'ac', 'jode', '2024-06-04 22:10:28', 1, '2024-06-23'),
+('504-923-9312', 'ac', 'jode', '2024-06-04 22:09:50', 1, '2024-06-23'),
+('504-924-9008', 'ac', 'jode', '2024-06-04 22:19:00', 1, '2024-06-23'),
+('504-958-1456', 'ac', 'jode', '2024-06-04 22:10:36', 1, '2024-06-23'),
+('504-965-1280', 'ac', 'jode', '2024-06-04 22:10:27', 1, '2024-06-23');
 
 -- --------------------------------------------------------
 
@@ -493,76 +323,23 @@ CREATE TABLE `train` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
+-- RELATIONSHIPS FOR TABLE `train`:
+--
+
+--
 -- Dumping data for table `train`
 --
 
 INSERT INTO `train` (`t_number`, `t_date`, `num_ac`, `num_sleeper`, `released_by`) VALUES
-(1, '2024-06-23', 10, 10, 'admin'),
-(1122, '2024-07-01', 10, 10, 'admin');
-
---
--- Triggers `train`
---
-DELIMITER $$
-CREATE TRIGGER `before_train_release` BEFORE INSERT ON `train` FOR EACH ROW BEGIN
-    DECLARE message VARCHAR(128) DEFAULT '';
-    DECLARE train_number INT;
-    DECLARE train_date DATE;
-    DECLARE lower_bound DATE DEFAULT DATE_ADD(CURRENT_DATE(), INTERVAL 1 MONTH);
-    DECLARE upper_bound DATE DEFAULT DATE_ADD(CURRENT_DATE(), INTERVAL 4 MONTH);
-    DECLARE finished INT DEFAULT 0;
-    DEClARE train_info CURSOR
-    	FOR SELECT t_number, t_date FROM train;
-	DECLARE CONTINUE HANDLER 
-    	FOR NOT FOUND SET finished = 1;
-
-    IF NEW.t_date < CURRENT_DATE() THEN
-    	SET message = CONCAT('Please select a date between ', lower_bound, ' and ', upper_bound);
-    ELSEIF NEW.t_date < lower_bound THEN
-    	SET message = CONCAT('It is too late for a train to be released! You are ', DATEDIFF(lower_bound, NEW.t_date), ' days late.' );
-    ELSEIF NEW.t_date > upper_bound THEN
-    	SET message = CONCAT('It is too early for the train to be released! Try Again after ', DATEDIFF(NEW.t_date, upper_bound), ' Days');
-    END IF;
-    
-    IF message != '' THEN
-        SIGNAL SQLSTATE '45000' 
-    	SET MESSAGE_TEXT = message;
-    END IF;
-
-    IF NEW.num_ac < 0 OR NEW.num_sleeper < 0 THEN
-    SET message = (message, CHAR(13), 'Enter valid number of coaches');
-    ELSEIF NEW.num_ac + NEW.num_sleeper = 0 THEN
-    SET message = CONCAT(message, CHAR(13), 'There is no coach in the train');
-    END IF;
-
-    IF message != '' THEN
-        SIGNAL SQLSTATE '45000' 
-    	SET MESSAGE_TEXT = message;
-    END IF;
-    
-	OPEN train_info;
-
-	get_info: LOOP
-		FETCH train_info INTO train_number, train_date;
-		IF finished = 1 THEN 
-			LEAVE get_info;
-		END IF;
-        IF train_number = NEW.t_number AND
-           train_date = NEW.t_date THEN
-        	SET message = CONCAT(message, '\nTrain number ', NEW.t_number, ' has been already released for ', NEW.t_date);
-        END IF;
- 
-	END LOOP get_info;
-   
-	CLOSE train_info;
-
-    IF message != '' THEN
-    	SIGNAL SQLSTATE '45000' 
-    	SET MESSAGE_TEXT = message;
-    END IF;
-END
-$$
-DELIMITER ;
+(1, '2024-06-23', 10, 10, ''),
+(23, '2024-06-08', 23, 23, 'admin'),
+(124, '2024-06-06', 12, 12, 'admin'),
+(234, '2024-06-07', 12, 12, 'admin'),
+(234, '2024-06-08', 23, 23, 'admin'),
+(243, '2024-06-07', 20, 20, 'admin'),
+(453, '2024-06-08', 12, 12, 'admin'),
+(777, '2024-07-05', 5, 5, 'admin'),
+(1122, '2024-07-01', 10, 10, '');
 
 -- --------------------------------------------------------
 
@@ -578,11 +355,22 @@ CREATE TABLE `train_status` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
+-- RELATIONSHIPS FOR TABLE `train_status`:
+--   `t_number`
+--       `train` -> `t_number`
+--   `t_date`
+--       `train` -> `t_date`
+--
+
+--
 -- Dumping data for table `train_status`
 --
 
 INSERT INTO `train_status` (`t_number`, `t_date`, `seats_b_ac`, `seats_b_sleeper`) VALUES
-(1, '2024-06-23', 1, 0),
+(1, '2024-06-23', 29, 0),
+(234, '2024-06-07', 0, 0),
+(243, '2024-06-07', 0, 0),
+(453, '2024-06-08', 0, 0),
 (1122, '2024-07-01', 2, 0);
 
 --
@@ -617,77 +405,83 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Table structure for table `user`
+-- Table structure for table `users`
 --
 
-CREATE TABLE `user` (
-  `username` varchar(50) NOT NULL,
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL,
+  `user` varchar(50) NOT NULL,
   `name` varchar(50) NOT NULL,
   `email` varchar(50) NOT NULL,
   `address` varchar(128) NOT NULL,
-  `password` varchar(50) NOT NULL
+  `role` tinyint(1) NOT NULL DEFAULT 0,
+  `password` varchar(50) NOT NULL,
+  `token` text NOT NULL,
+  `last_login` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `failed_login` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `user`
+-- RELATIONSHIPS FOR TABLE `users`:
 --
 
-INSERT INTO `user` (`username`, `name`, `email`, `address`, `password`) VALUES
-('adminn', 'admin admin', 'admin11@gmail.com', 'kahama', '7488e331b8b64e5794da3fa4eb10ad5d'),
-('dako', 'John Dako', 'dakojohn36@gmail.com', 'kahama', '$2y$10$L1x45AmST/9LuP0HhEv4uOqJXRZuUrQ7puQecR2QM/E'),
-('fatuma', 'Fatuma Jadi', 'jadifatma45@gmail.com', 'Dar es salaam', '$2y$10$vgcGWjVYzWBQ1ypGumiq9OTvxeglG5fBR0gWm8Yw0OG'),
-('fatumaa', 'Fatuma Jadi', 'jadifatma4rt5@gmail.com', 'Dar es salaam', '$2y$10$mdNm2F0.aKgGqZYCc8fXDu9eXBLyvi4QfWhj7hdXE4x'),
-('halima', 'Halima', 'halima45@gmail.com', 'dar', 'halima12345'),
-('joe', 'JOSEPH ZACHARIA ROJA', 'josephroja99@gmail.com', 'Dodoma', '200300400Ab'),
-('kulwa', 'kulwa dato', 'kulwaje@gmail.com', 'jakka', '823fc4bf7a02b5b2b62c1eee4f5bceb1'),
-('majaliwa', 'Majaliwa John', 'majaliwa365@gmail.com', 'Kigoma', 'a3b314b4eed9a847dfe27ce3cb560296'),
-('musa', 'musa ally', 'musa26@yahoo.com', 'Dar', '7dbaf4d3bce3b62558e6831d59c08eb3');
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `user`, `name`, `email`, `address`, `role`, `password`, `token`, `last_login`, `failed_login`) VALUES
+(1, 'admin', 'admin', 'admin@gmail.com', 'Dodoma', 1, '40bd001563085fc35165329ea1ff5c5ecbdbbeef', '', '2024-06-04 22:29:03', 0),
+(2, 'deleter', 'deleter', 'deleter@gmail.com', 'Dodoma', 1, '40bd001563085fc35165329ea1ff5c5ecbdbbeef', '', '2024-06-04 22:26:34', 0),
+(3, 'jj', 'ss', 'jadizo@gmail.com', 'ss', 0, '7c222fb2927d828af22f592134e8932480637c0d', '', '2024-06-04 04:47:54', 0),
+(4, 'dele', 'Ismail Haji', 'dele@gmail.com', 'Dodoma', 0, '40bd001563085fc35165329ea1ff5c5ecbdbbeef', '', '2024-06-04 12:32:29', 0),
+(5, 'jode', 'jadi', 'jose@gmail.com', 'hh', 0, '40bd001563085fc35165329ea1ff5c5ecbdbbeef', '', '2024-06-04 22:09:05', 0);
 
 --
 -- Indexes for dumped tables
 --
 
 --
--- Indexes for table `admin`
---
-ALTER TABLE `admin`
-  ADD PRIMARY KEY (`username`);
-
---
 -- Indexes for table `passenger`
 --
 ALTER TABLE `passenger`
-  ADD PRIMARY KEY (`pnr_no`,`berth_no`,`coach_no`),
-  ADD KEY `pnr_no` (`pnr_no`);
+  ADD PRIMARY KEY (`pnr_no`,`berth_no`,`coach_no`);
 
 --
 -- Indexes for table `ticket`
 --
 ALTER TABLE `ticket`
   ADD PRIMARY KEY (`pnr_no`),
-  ADD KEY `username` (`booked_by`),
   ADD KEY `t_number` (`t_number`,`t_date`);
 
 --
 -- Indexes for table `train`
 --
 ALTER TABLE `train`
-  ADD PRIMARY KEY (`t_number`,`t_date`),
-  ADD KEY `released_by` (`released_by`);
+  ADD PRIMARY KEY (`t_number`,`t_date`);
 
 --
 -- Indexes for table `train_status`
 --
 ALTER TABLE `train_status`
   ADD PRIMARY KEY (`t_number`,`t_date`),
-  ADD KEY `t_number` (`t_number`),
-  ADD KEY `t_date` (`t_date`);
+  ADD KEY `t_date` (`t_date`),
+  ADD KEY `t_number` (`t_number`) USING BTREE;
 
 --
--- Indexes for table `user`
+-- Indexes for table `users`
 --
-ALTER TABLE `user`
-  ADD PRIMARY KEY (`username`);
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Constraints for dumped tables
@@ -700,23 +494,11 @@ ALTER TABLE `passenger`
   ADD CONSTRAINT `passenger_ibfk_1` FOREIGN KEY (`pnr_no`) REFERENCES `ticket` (`pnr_no`);
 
 --
--- Constraints for table `ticket`
---
-ALTER TABLE `ticket`
-  ADD CONSTRAINT `ticket_ibfk_1` FOREIGN KEY (`booked_by`) REFERENCES `user` (`username`),
-  ADD CONSTRAINT `ticket_ibfk_2` FOREIGN KEY (`t_number`,`t_date`) REFERENCES `train` (`t_number`, `t_date`);
-
---
--- Constraints for table `train`
---
-ALTER TABLE `train`
-  ADD CONSTRAINT `train_ibfk_1` FOREIGN KEY (`released_by`) REFERENCES `admin` (`username`);
-
---
 -- Constraints for table `train_status`
 --
 ALTER TABLE `train_status`
   ADD CONSTRAINT `train_status_ibfk_1` FOREIGN KEY (`t_number`,`t_date`) REFERENCES `train` (`t_number`, `t_date`);
+SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

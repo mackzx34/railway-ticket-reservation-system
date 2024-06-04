@@ -94,7 +94,7 @@
                 <p class= "bg-danger text-white"><?php echo htmlspecialchars($errors['date'])?></p>
             </label>
             <p class= "bg-danger text-white"><?php echo htmlspecialchars($errors['final'])?></p>
-        <a href="index.php" class="register">Back</a>
+        <a href="user.php" class="register">Back</a>
         <button type="submit" name="submit" value="submit">Check</button>
         <br><br>
         

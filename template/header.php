@@ -20,14 +20,14 @@
         <a class="nav-link" href="index.php">Home</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="view-ticket.php">View Ticket</a>
+        <a class="nav-link" href="view-ticket.php">Ticket</a>
       </li>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="view-trains.php">View Trains</a>
+        <a class="nav-link" href="view-trains.php">Trains</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="view-status.php">View Train Status</a>
+        <a class="nav-link" href="view-status.php">Train Status</a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="about.php">About Us</a>

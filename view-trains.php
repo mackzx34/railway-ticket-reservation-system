@@ -81,7 +81,7 @@
     <?php } ?> 
 
     <br><br><br>
-    <a href="admin-page.php" class="register">Back</a>
+    <a href="user.php" class="register">Back</a>
 </form>
 </div>
 
